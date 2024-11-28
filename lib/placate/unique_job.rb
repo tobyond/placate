@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require "digest"
+require "active_support"
 
 module Placate
   module UniqueJob
@@ -28,17 +29,13 @@ module Placate
         existing_lock = Placate.redis.get(lock_key)
 
         if existing_lock
-          # Only check TTL if it's set
-          if job.class.unique_lock_ttl
-            lock_time = existing_lock.to_i
-            throw :abort unless current_time - lock_time >= job.class.unique_lock_ttl
-          else
-            throw :abort # No TTL, just prevent duplicates
-          end
+          return throw :abort unless job.class.unique_lock_ttl
+
+          lock_time = existing_lock.to_i
+          throw :abort unless current_time - lock_time >= job.class.unique_lock_ttl
         end
 
         Placate.redis.set(lock_key, current_time)
-        job.instance_variable_set(:@unique_lock_key, lock_key)
       end
 
       after_perform do |job|

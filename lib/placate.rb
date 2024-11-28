@@ -1,14 +1,11 @@
 # frozen_string_literal: true
 
-require "active_support"
-
 require_relative "placate/version"
 require_relative "placate/configuration"
 require_relative "placate/unique_job"
 
 module Placate
   class Error < StandardError; end
-  # Your code goes here...
 
   class << self
     def configure

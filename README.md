@@ -1,6 +1,6 @@
 # Placate
 
-Placate is a simple Redis-based solution for preventing duplicate job execution in Ruby background job processors. It's designed to work with ActiveJob and any Redis-backed job system.
+Placate is a lightweight Redis-based solution designed to prevent duplicate jobs in Rails ActiveJob.
 
 ## Installation
 
@@ -25,7 +25,10 @@ First, configure Placate with your Redis connection:
 # config/initializers/placate.rb
 Placate.configure do |config|
   config.redis = Redis.new
-  config.default_lock_ttl = 30 # Default time-to-live in seconds
+
+  # time-to-live in seconds
+  # default is nil, which only allows 1 job to be queued at a time
+  # config.default_lock_ttl = 30 
 end
 ```
 

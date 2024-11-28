@@ -5,7 +5,7 @@ module Placate
     attr_accessor :redis, :default_lock_ttl
 
     def initialize
-      @default_lock_ttl = 60 # 1 minute default
+      @default_lock_ttl = nil
     end
   end
 end

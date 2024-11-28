@@ -11,6 +11,16 @@ class TestJob < ActiveJob::Base
   end
 end
 
+class TestJobWithTTL < ActiveJob::Base
+  include Placate::UniqueJob
+  self.unique_lock_ttl = 30
+  queue_as :default
+  
+  def perform(*args)
+    true
+  end
+end
+
 class UniqueJobTest < Minitest::Test
   include ActiveJob::TestHelper
 
@@ -18,7 +28,6 @@ class UniqueJobTest < Minitest::Test
     @redis = MockRedis.new
     Placate.configure do |config|
       config.redis = @redis
-      config.default_lock_ttl = 30
     end
     ActiveJob::Base.queue_adapter = :test
   end
@@ -36,13 +45,13 @@ class UniqueJobTest < Minitest::Test
   end
 
   def test_allows_job_after_ttl
-    TestJob.perform_later
+    TestJobWithTTL.perform_later
 
     # Simulate time passing
-    lock_key = "TestJob:#{Digest::MD5.hexdigest([].to_s)}:lock"
+    lock_key = "TestJobWithTTL:#{Digest::MD5.hexdigest([].to_s)}:lock"
     @redis.set(lock_key, (Time.now.to_i - 31))
 
-    TestJob.perform_later
+    TestJobWithTTL.perform_later
     assert_equal 2, ActiveJob::Base.queue_adapter.enqueued_jobs.size
   end
 

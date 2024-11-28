@@ -28,11 +28,17 @@ module Placate
         existing_lock = Placate.redis.get(lock_key)
 
         if existing_lock
-          lock_time = existing_lock.to_i
-          throw :abort if current_time - lock_time < (job.class.unique_lock_ttl || 30)
+          # Only check TTL if it's set
+          if job.class.unique_lock_ttl
+            lock_time = existing_lock.to_i
+            throw :abort unless current_time - lock_time >= job.class.unique_lock_ttl
+          else
+            throw :abort # No TTL, just prevent duplicates
+          end
         end
 
         Placate.redis.set(lock_key, current_time)
+        job.instance_variable_set(:@unique_lock_key, lock_key)
       end
 
       after_perform do |job|
